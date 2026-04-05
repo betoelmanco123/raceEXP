@@ -3,15 +3,16 @@ import processIm
 
 CONVERT = math.pi / 180
 
-validMap = processIm.get_matrix("sprites/map0.jpg")
-startposition = (400, 150)
+validMap = processIm.get_matrix("sprites/map3.jpg")
+startposition = (400, 100)
+
 
 class RaceCar:
 
     def __init__(self, validMap=validMap, startposition=startposition):
 
-            
         # car stats
+        self.startposition = startposition
         self.position = startposition
         self.x, self.y = self.position
         self.speed = 1
@@ -19,23 +20,29 @@ class RaceCar:
         self.mutateSpeed = 0.1
         self.turnSpeed = 12
         self.alive = True
-        self.direccion = 180
+        self.direction = 180
         self.distanceTraveled = 0
-        
+        self.hitbox = [13, 28]
+        self.speedLimit = 5
+
         # map stats
         self.map = validMap
-        self.checkpoints = [(390, 150), (375, 150), (150, 450), (375, 720), (150, 450)]
+        self.checkpoints = [
+            (250, 150),
+            (250, 650),
+            (650, 650),
+            (750, 200),
+
+        ]
         self.laps = 0
         self.counterCheckpoint = 0
 
-
         # Raycast
-        self.RayLarge = 50
+        self.RayLarge = 20
         self.RayValues = None
-        
-        
+
         # Neurons
-        self.hidden_size = 4
+        self.hidden_size = 7
         self.input_size = 6
         self.output_size = 2
         self.w_ih = [
@@ -47,8 +54,6 @@ class RaceCar:
             for _ in range(self.output_size)
         ]
 
-        
-
     # Control of the car
     def acelerate(self):
         self.speed += self.aceleration
@@ -57,7 +62,7 @@ class RaceCar:
         if not self.alive:
             return
         speed = self.speed + accel
-        direccion = self.direccion + turn
+        direccion = self.direction + turn
         rad = direccion * (CONVERT)
         temp_x = self.x + speed * math.cos(rad)
         temp_y = self.y + speed * math.sin(rad)
@@ -67,11 +72,13 @@ class RaceCar:
         if temp_y >= len(self.map) or temp_y < 0:
             return False
 
-        if self.collition(temp_x, temp_y):
+        if self.hitboxColittion(temp_x, temp_y):
             self.alive = False
             return False
-        self.direccion = direccion % 360
-        self.speed = max(0, speed)
+        self.direction = direccion % 360
+        self.speed = min(self.speedLimit,max(0, speed))
+        if self.speed == 0:
+            self.alive = False
         self.distanceTraveled += math.hypot(temp_x - self.x, temp_y - self.y)
         self.x = temp_x
         self.y = temp_y
@@ -132,17 +139,46 @@ class RaceCar:
             y = 0
         if x < 0:
             x = 0
-        cx, cy = self.checkpoints[self.counterCheckpoint]
-
-        if abs(x - cx) < 30 and abs(y - cy) < 30:
-            self.counterCheckpoint += 1
-            if self.counterCheckpoint >= len(self.checkpoints):
-                self.counterCheckpoint = 0
+        if self._touch_checkpoint(x, y):
             return False
 
         if self.map[y][x] < 20:
 
             return (y, x)
+
+        return False
+
+    def hitboxColittion(self, x, y):
+        y = math.floor(y)
+        x = math.floor(x)
+
+        if self._touch_checkpoint(x, y):
+            return False
+
+        heigh, width = self.hitbox
+
+        heigh_half, width_half = heigh / 2, width / 2
+
+        rectangle = [
+            [(x - width_half, y - heigh_half), (x + width_half, y - heigh_half)],
+            [(x - width_half, y + heigh_half), (x + width_half, y + heigh_half)],
+        ]
+        for face in rectangle:
+            for point in face:
+                sx, sy = point
+                if self.isWall(sx, sy):
+                    return True
+        return False
+
+    def _touch_checkpoint(self, x, y):
+        cx, cy = self.checkpoints[self.counterCheckpoint]
+
+        if abs(x - cx) < 20 and abs(y - cy) < 20:
+            self.counterCheckpoint += 1
+            if self.counterCheckpoint >= len(self.checkpoints):
+                self.counterCheckpoint = 0
+                self.laps += 1
+            return True
 
         return False
 
@@ -167,8 +203,9 @@ class RaceCar:
     # ray cast
     def RayCast(self, angle):
         crash = None
-        valueX = math.cos(math.radians(angle))
-        valueY = math.sin(angle * CONVERT)
+        rad = angle * CONVERT
+        valueX = math.cos(rad)
+        valueY = math.sin(rad)
         for i in range(1, self.RayLarge + 1):
 
             rayX = i * valueX + self.x
@@ -179,20 +216,21 @@ class RaceCar:
                 by, bx = rayy, rayX
                 break
         if crash:
-            return getDistance((bx, by), self.position)
+            return getDistance((bx, by), (self.x, self.y))
         return self.RayLarge + 1
 
     def multipleRayCast(self):
         values = [
-            self.RayCast(self.direccion - 90),
-            self.RayCast(self.direccion - 45),
-            self.RayCast(self.direccion),
-            self.RayCast(self.direccion + 45),
-            self.RayCast(self.direccion + 90),
+            self.RayCast(self.direction - 90),
+            self.RayCast(self.direction - 45),
+            self.RayCast(self.direction),
+            self.RayCast(self.direction + 45),
+            self.RayCast(self.direction + 90),
+
         ]
         self.RayValues = values
         return values
-    
+
     # execute one turn
     def run(self):
         turn, accel = self.think()
@@ -210,6 +248,14 @@ class RaceCar:
         print(f"Distance TRaveled {self.distanceTraveled}")
         print(f"the speed is {self.speed}")
         print(f"this car achived {self.laps} laps")
+    
+    def print_laps(self):
+        print(f"-------------------{self.laps}-----------")
+        print(f"-------------------{self.counterCheckpoint}-----------")
+
+    def goToStart(self):
+        self.position = self.startposition
+        self.x, self.y = self.position
 
     def upToDate(self):
         self.position = (self.x, self.y)
@@ -251,13 +297,13 @@ def getGoal(mapa):
     return None
 
 
-def getwinners(cars):
+def getwinners(cars, number):
     values = dict()
     for car in cars:
-        values[car] = 10 * (car.laps * 4 + car.counterCheckpoint)
+        values[car] = 100 * (car.laps * 4 + car.counterCheckpoint) + car.distanceTraveled
     ordenado = sorted(values, key=values.get)
 
-    return ordenado[-5:]
+    return ordenado[-number:]
 
 
 def getDistance(pointA, pointB):

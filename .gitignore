@@ -1,0 +1,25 @@
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.vscode/
+.python-version
+.toml
+.lock
+# Tooling caches
+.pytest_cache/
+.mypy_cache/
+
+# Local env files
+.env
+.env.*
+
+# OS files
+.DS_Store
