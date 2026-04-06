@@ -4,7 +4,7 @@ import processIm
 CONVERT = math.pi / 180
 
 validMap = processIm.get_matrix("sprites/map3.jpg")
-startposition = (400, 100)
+startposition = (750, 100)
 
 
 class RaceCar:
@@ -24,27 +24,36 @@ class RaceCar:
         self.distanceTraveled = 0
         self.hitbox = [13, 28]
         self.speedLimit = 5
+        self.steering = 0
+        self.length = 10
 
         # map stats
         self.map = validMap
         self.checkpoints = [
-            (250, 150),
-            (250, 650),
-            (650, 650),
-            (750, 200),
+            (145, 145),
+            (145, 750),
+            (750, 750),
+            (750, 145),
 
         ]
         self.laps = 0
         self.counterCheckpoint = 0
 
         # Raycast
-        self.RayLarge = 20
-        self.RayValues = None
+        self.RayLarge = 200
+        self.RayValues = [0 for _ in range(5)]
 
         # Neurons
         self.hidden_size = 7
-        self.input_size = 6
+        self.input_size = 7
         self.output_size = 2
+        self.angles = [
+            -90,
+            -45,
+            0,
+            45,
+            90
+        ]
         self.w_ih = [
             [random.uniform(-1, 1) for _ in range(self.input_size)]
             for _ in range(self.hidden_size)
@@ -58,14 +67,16 @@ class RaceCar:
     def acelerate(self):
         self.speed += self.aceleration
 
-    def updatePosition(self, turn=0, accel=0):
+    def updatePosition(self, steering=0, accel=0):
         if not self.alive:
             return
-        speed = self.speed + accel
-        direccion = self.direction + turn
-        rad = direccion * (CONVERT)
-        temp_x = self.x + speed * math.cos(rad)
-        temp_y = self.y + speed * math.sin(rad)
+        self.speed += accel
+        self.speed = min(self.speedLimit, max(0, self.speed))
+        self.direction += (self.speed / self.length) * math.tan(steering)
+        self.direction %= 360
+        rad = self.direction * (CONVERT)
+        temp_x = self.x + self.speed * math.cos(rad)
+        temp_y = self.y + self.speed * math.sin(rad)
 
         if temp_x >= len(self.map[0]) or temp_x < 0:
             return False
@@ -75,8 +86,7 @@ class RaceCar:
         if self.hitboxColittion(temp_x, temp_y):
             self.alive = False
             return False
-        self.direction = direccion % 360
-        self.speed = min(self.speedLimit,max(0, speed))
+
         if self.speed == 0:
             self.alive = False
         self.distanceTraveled += math.hypot(temp_x - self.x, temp_y - self.y)
@@ -92,6 +102,7 @@ class RaceCar:
 
         inputs = [v / self.RayLarge for v in self.multipleRayCast()]
         inputs.append(self.speed / 10)
+        inputs.append(self.direction)
 
         hidden = []
         for i in range(self.hidden_size):
@@ -188,17 +199,18 @@ class RaceCar:
         child = RaceCar()
         child.w_ih = [row[:] for row in self.w_ih]
         child.w_ho = [row[:] for row in self.w_ho]
-        child.mutate()
+        if random.random() <.70:
+            child.mutate(max(1.2 - (self.counterCheckpoint * .02 + self.laps * .09), .001))
         return child
 
-    def mutate(self):
-
+    def mutate(self, speed=1):
+        mutateSpeed = speed * self.mutateSpeed
         for row in self.w_ih:
             for j in range(len(row)):
-                row[j] += random.uniform(-self.mutateSpeed, self.mutateSpeed)
+                row[j] += random.uniform(-mutateSpeed, mutateSpeed)
         for row in self.w_ho:
             for j in range(len(row)):
-                row[j] += random.uniform(-self.mutateSpeed, self.mutateSpeed)
+                row[j] += random.uniform(-mutateSpeed, mutateSpeed)
 
     # ray cast
     def RayCast(self, angle):
@@ -256,6 +268,10 @@ class RaceCar:
     def goToStart(self):
         self.position = self.startposition
         self.x, self.y = self.position
+        self.distanceTraveled = 0
+        self.alive = True
+        self.counterCheckpoint = 0
+        self.laps = 0
 
     def upToDate(self):
         self.position = (self.x, self.y)
@@ -300,7 +316,7 @@ def getGoal(mapa):
 def getwinners(cars, number):
     values = dict()
     for car in cars:
-        values[car] = 100 * (car.laps * 4 + car.counterCheckpoint) + car.distanceTraveled
+        values[car] = 1000 * (car.laps * 4 + car.counterCheckpoint) + car.distanceTraveled
     ordenado = sorted(values, key=values.get)
 
     return ordenado[-number:]
