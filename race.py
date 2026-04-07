@@ -1,5 +1,6 @@
-import random, math, json, os
+import random, math
 import processIm
+from utils import getDistance, getwinners
 
 CONVERT = math.pi / 180
 
@@ -281,136 +282,17 @@ class RaceCar:
         self.laps = 0
         self.known = list()
         self.reward = 0
-        
+
     def get_genetics(self):
         genes = dict()
-        
+
         genes["inputs"] = self.w_ih
         genes["outputs"] = self.w_ho
-        
+
         return genes
 
     def upToDate(self):
         self.position = (self.x, self.y)
-
-
-def ReadMap(mapName):
-
-    with open(
-        mapName,
-        "r",
-    ) as Map:
-
-        valid_map = list()
-        for line in Map:
-            temp = list()
-            for character in line:
-                if character == "\n":
-                    continue
-                temp.append(character)
-            valid_map.append(temp)
-    return valid_map
-
-
-def getStart(mapa):
-    for i in range(len(mapa)):
-        for j in range(len(mapa[0])):
-            if mapa[i][j] == "S":
-                return (j, i)
-
-    return None
-
-
-def getGoal(mapa):
-    for i in range(len(mapa)):
-        for j in range(len(mapa[0])):
-            if mapa[i][j] == "G":
-                return (j, i)
-
-    return None
-
-
-def getwinners(cars, number):
-    values = dict()
-    for car in cars:
-
-        value = 1000 * (car.laps * 4 + car.counterCheckpoint) + car.distanceTraveled / 2
-        if not car.alive:
-            value -= 100
-        if car.speed <= 0.2:
-            value -= 500
-        if car.speed <= 0.15:
-            value -= 100
-        value += car.reward * 100 * car.speed
-
-        values[car] = value
-
-    ordenado = sorted(values, key=values.get)
-
-    return ordenado[-number:]
-
-
-def get_children_result(A, B):
-
-    child = RaceCar()
-    child.w_ih = [row[:] for row in A.w_ih[:6]] + [row[:] for row in B.w_ih[6:]]
-    child.w_ho = [row[:] for row in A.w_ho[:1]] + [row[:] for row in B.w_ho[1:]]
-    if random.random() < 0.50:
-        child.mutate()
-    return child
-
-
-def mix_up(cars, number):
-
-    new_ones = list()
-
-    counter = 0
-    while counter < number:
-
-        A = random.choice(cars)
-        B = random.choice(cars)
-        child = get_children_result(A, B)
-        new_ones.append(child)
-        counter += 1
-    return new_ones
-
-
-def getDistance(pointA, pointB):
-    ax, ay = pointA
-    bx, by = pointB
-    return math.hypot((ax - bx), (ay - by))
-
-
-def store_cars(cars, dirName):
-    for i in range(len(cars)):
-        path = dirName + f"car{i}.txt"
-        save_car(cars[i], path)
-            
-
-def save_car(car, fileName) -> None:
-    genes = car.get_genetics()
-    
-    with open (fileName, "w") as file:
-        
-        json.dump(genes, file, indent=4)
-
-def get_stored_cars(dirName):
-    cars = list()
-    for archivo in os.listdir(dirName):
-        car = read_car(dirName + "/" +archivo)
-        cars.append(car)
-    return cars
-def read_car(fileName) -> RaceCar:
-    
-    car = RaceCar()
-    with open (fileName, "r") as file:
-        data = json.load(file)
-        car.w_ih = data["inputs"]
-        car.w_ho = data["outputs"]
-    
-    return car
-        
-
 
 
 def play():
@@ -434,7 +316,4 @@ def play():
 
 
 if __name__ == "__main__":
-    car = RaceCar()
-    car2 = RaceCar()
-    store_cars([car, car2], "cars/")
-    print(get_stored_cars("cars"))
+    play()
