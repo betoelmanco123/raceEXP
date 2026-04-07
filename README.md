@@ -1,20 +1,11 @@
-# Race (uv + pygame)
+# Race Simulation
+This project uses a genetic algorithm to train cars that try to complete a circut to win a race
 
-## Ejecutar sin errores de imports
+## Objective
+Train agents to learn how to run in any given map
 
-Este proyecto usa `uv` y el entorno virtual local `.venv`.
-
-Comando recomendado:
-
-```bash
-uv run python runner.py
-```
-
-Si quieres usar `python` directo en la terminal:
-
-```bash
-source .venv/bin/activate
-python runner.py
-```
-
-Si ejecutas `python3 runner.py` sin activar `.venv`, usaras el Python global y pueden fallar imports como `pygame`.
+## Rules of this project 
+1. The cars have to use neuroevolution to learn
+1. Only the pygame library is allowed to be used 
+1. All the enviroment and agent features have to be created without using any external library
+1. The training of the agents can't depend on the visulization of the project (the agents can train without rendering the map)
