@@ -1,4 +1,4 @@
-import random, math
+import random, math, json, os
 import processIm
 
 CONVERT = math.pi / 180
@@ -18,12 +18,12 @@ class RaceCar:
         self.speed = 3
         self.aceleration = 0.09
         self.mutateSpeed = 0.09
-        self.turnSpeed = 1.8
+        self.turnSpeed = 2
         self.alive = True
         self.direction = 180
         self.distanceTraveled = 0
         self.hitbox = [13, 28]
-        self.speedLimit = 10
+        self.speedLimit = 5
         self.steering = 0
         self.length = 28
         self.known = list()
@@ -69,7 +69,7 @@ class RaceCar:
         if not self.alive:
             return
         self.speed += accel * time * 60
-        self.speed = min(self.speedLimit, max(-self.speedLimit, self.speed))
+        self.speed = min(self.speedLimit, max(-self.speedLimit + 3, self.speed))
         self.direction += steering * self.turnSpeed * (self.speed / self.speedLimit)
         self.direction %= 360
         rad = self.direction * (CONVERT)
@@ -281,6 +281,14 @@ class RaceCar:
         self.laps = 0
         self.known = list()
         self.reward = 0
+        
+    def get_genetics(self):
+        genes = dict()
+        
+        genes["inputs"] = self.w_ih
+        genes["outputs"] = self.w_ho
+        
+        return genes
 
     def upToDate(self):
         self.position = (self.x, self.y)
@@ -326,14 +334,14 @@ def getwinners(cars, number):
     values = dict()
     for car in cars:
 
-        value = 1000 * (car.laps * 4 + car.counterCheckpoint) + car.distanceTraveled / 5
+        value = 1000 * (car.laps * 4 + car.counterCheckpoint) + car.distanceTraveled / 2
         if not car.alive:
             value -= 100
         if car.speed <= 0.2:
             value -= 500
         if car.speed <= 0.15:
             value -= 100
-        value += car.reward * 10
+        value += car.reward * 100 * car.speed
 
         values[car] = value
 
@@ -373,6 +381,38 @@ def getDistance(pointA, pointB):
     return math.hypot((ax - bx), (ay - by))
 
 
+def store_cars(cars, dirName):
+    for i in range(len(cars)):
+        path = dirName + f"car{i}.txt"
+        save_car(cars[i], path)
+            
+
+def save_car(car, fileName) -> None:
+    genes = car.get_genetics()
+    
+    with open (fileName, "w") as file:
+        
+        json.dump(genes, file, indent=4)
+
+def get_stored_cars(dirName):
+    cars = list()
+    for archivo in os.listdir(dirName):
+        car = read_car(dirName + "/" +archivo)
+        cars.append(car)
+    return cars
+def read_car(fileName) -> RaceCar:
+    
+    car = RaceCar()
+    with open (fileName, "r") as file:
+        data = json.load(file)
+        car.w_ih = data["inputs"]
+        car.w_ho = data["outputs"]
+    
+    return car
+        
+
+
+
 def play():
     everyone = [RaceCar() for _ in range(100)]
 
@@ -394,4 +434,7 @@ def play():
 
 
 if __name__ == "__main__":
-    play()
+    car = RaceCar()
+    car2 = RaceCar()
+    store_cars([car, car2], "cars/")
+    print(get_stored_cars("cars"))
