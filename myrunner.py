@@ -1,76 +1,63 @@
+from math import sin, cos, radians
+
+from utils import getwinners
+from race import RaceCar
+from heredation import mix_up
+
+
 import pygame
-from race import RaceCar, getwinners, mix_up
-import math, time
 
-
-pygame.init()
-
+# constants
 CARSIZE = [14, 36]
 
-screen = pygame.display.set_mode((900, 900))
 
-carsprite = pygame.transform.scale(pygame.image.load("sprites/car.png"), (72, 28))
+CAR_SPRITE_NAME = "sprites/car.png"
+MAP_SPRITE_NAME = "sprites/map3.jpg"
+WIDTH = 900
+HEIGHT = 900
 
-mapsprite = pygame.transform.scale(pygame.image.load("sprites/map3.jpg"), (900, 900))
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-running = True
+# images
+carsprite = pygame.transform.scale(
+    pygame.image.load(CAR_SPRITE_NAME), (72, 28)
+).convert_alpha()
+mapsprite = pygame.transform.scale(
+    pygame.image.load(MAP_SPRITE_NAME), (900, 900)
+).convert()
 
 
-first = RaceCar()
-first.image = carsprite
-
-
-def updateCar(car, time):
+def update_car(car: list[RaceCar], time) -> None:
+    """Update the visual component for a car"""
     car.run(time)
     car.image = pygame.transform.rotate(carsprite, -car.direction)
     car.rect = car.image.get_rect(center=(car.x, car.y))
     screen.blit(car.image, car.rect)
 
 
-def alldied(cars):
+def is_all_died(cars: list[RaceCar]) -> bool:
+    """Return `True` if every car in a list is not alive"""
+
     for car in cars:
         if car.alive:
             return False
     return True
 
 
-def reset_generation(cars):
-    winners = getwinners(cars, 5)
-    cars = list()
-    for car in winners:
-
-        car.goToStart()
-        car.print_laps()
-        for _ in range(10):
-            child = car.haveChild()
-            cars.append(child)
-        cars.append(car)
-    return cars
-
-
-def new_generation(cars):
-    winners = getwinners(cars, 3)
-
-    for car in winners:
-        car.goToStart()
-
-    new_cars = mix_up(winners, 50)
-
-    return new_cars + winners
-
-
-def drawRays(car):
+# raycast
+def draw_raycast(car: RaceCar) -> None:
     for i in range(len(car.RayValues)):
         if not car.alive:
             return
-        theta = math.radians(car.angles[i] + car.direction + 90)
+        theta = radians(car.angles[i] + car.direction + 90)
         pygame.draw.line(
             screen,
             (120, 0, 0),
             (car.x, car.y),
             (
-                car.RayValues[i] * math.sin(theta) + car.x,
-                -car.RayValues[i] * math.cos(theta) + car.y,
+                car.RayValues[i] * sin(theta) + car.x,
+                -car.RayValues[i] * cos(theta) + car.y,
             ),
         )
 
@@ -81,7 +68,7 @@ def run_simulation(cars, turn, generation, time):
     for car in cars:
         if car.alive:
             alive = True
-            updateCar(car, time)
+            update_car(car, time)
             vivos += 1
 
     if not alive:
@@ -95,7 +82,7 @@ def run_simulation(cars, turn, generation, time):
 
     winners = getwinners(cars, 2)
     for winner in winners:
-        drawRays(winner)
+        draw_raycast(winner)
     turn += 1
     if turn >= 300 and set_mode:
         cars = new_generation(cars)
@@ -105,35 +92,60 @@ def run_simulation(cars, turn, generation, time):
     return cars, turn, generation
 
 
+# generation
+def new_generation(cars):
+    winners = getwinners(cars, 3)
+
+    for car in winners:
+        car.goToStart()
+
+    new_cars = mix_up(winners, 50)
+
+    return new_cars + winners
+
+
 cars = [RaceCar() for _ in range(20)]
 for car in cars:
     car.image = carsprite
 
-turn = 0
+
+# variables
+running = True
 set_mode = True
+turn = 0
 generation = 0
+
+# time control
 clock = pygame.time.Clock()
 last = pygame.time.get_ticks()
-while running:
-    screen.blit(mapsprite, (0, 0))  # negro (fondo)
 
+# main loop
+while running:
+
+    screen.blit(mapsprite, (0, 0))
+
+    # mouse and keyboard detection
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
 
+            if event.key == pygame.K_SPACE:
                 cars = new_generation(cars)
                 turn = 0
                 generation += 1
+
             if event.key == pygame.K_r:
                 set_mode = False
 
     current = pygame.time.get_ticks()
     dt = (current - last) / 1000.0
     last = current
+
     cars, turn, generation = run_simulation(cars, turn, generation, dt)
+
     start = pygame.time.get_ticks()
+
     clock.tick(60)
     pygame.display.update()
