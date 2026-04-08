@@ -2,9 +2,10 @@ import json, os
 from race import RaceCar
 
 
-def store_cars(cars, dirName):
+def store_cars(cars, dirName="cars"):
+    os.makedirs(dirName, exist_ok=True)
     for i in range(len(cars)):
-        path = dirName + f"car{i}.txt"
+        path = os.path.join(dirName, f"car{i}.txt")
         save_car(cars[i], path)
 
 
@@ -16,7 +17,7 @@ def save_car(car, fileName) -> None:
         json.dump(genes, file, indent=4)
 
 
-def get_stored_cars(dirName):
+def get_stored_cars(dirName="cars"):
     cars = list()
     for archivo in os.listdir(dirName):
         car = read_car(dirName + "/" + archivo)
