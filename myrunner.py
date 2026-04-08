@@ -2,7 +2,8 @@ from math import sin, cos, radians
 
 from utils import getwinners
 from race import RaceCar
-from heredation import mix_up
+from heredation import new_generation
+from storage import get_stored_cars
 
 
 import pygame
@@ -15,6 +16,9 @@ CAR_SPRITE_NAME = "sprites/car.png"
 MAP_SPRITE_NAME = "sprites/map3.jpg"
 WIDTH = 900
 HEIGHT = 900
+CHECKPOINT_BASE_RADIUS = 20
+CHECKPOINT_EXTRA_RADIUS = 80
+CHECKPOINT_DRAW_RADIUS = CHECKPOINT_BASE_RADIUS + CHECKPOINT_EXTRA_RADIUS
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -48,8 +52,7 @@ def is_all_died(cars: list[RaceCar]) -> bool:
 # raycast
 def draw_raycast(car: RaceCar) -> None:
     for i in range(len(car.RayValues)):
-        if not car.alive:
-            return
+
         theta = radians(car.angles[i] + car.direction + 90)
         pygame.draw.line(
             screen,
@@ -62,7 +65,19 @@ def draw_raycast(car: RaceCar) -> None:
         )
 
 
-def run_simulation(cars, turn, generation, time):
+def draw_checkpoints(checkpoints) -> None:
+    for checkpoint in checkpoints:
+        pygame.draw.circle(
+            screen,
+            (30, 170, 255),
+            checkpoint,
+            CHECKPOINT_DRAW_RADIUS,
+            2,
+        )
+        pygame.draw.circle(screen, (255, 210, 0), checkpoint, 4)
+
+
+def run_simulation(cars, turn, generation, time,checkpoint, turn_limit=300):
     vivos = 0
     alive = False
     for car in cars:
@@ -72,7 +87,7 @@ def run_simulation(cars, turn, generation, time):
             vivos += 1
 
     if not alive:
-        cars = new_generation(cars)
+        cars, _, checkpoint = new_generation(cars)
         generation += 1
         turn = 0
 
@@ -80,33 +95,25 @@ def run_simulation(cars, turn, generation, time):
         f"Generation: {generation}   Vivos :{vivos}  Turn: {turn}"
     )
 
-    winners = getwinners(cars, 2)
+    winners = getwinners(cars, 5)
     for winner in winners:
         draw_raycast(winner)
     turn += 1
-    if turn >= 300 and set_mode:
-        cars = new_generation(cars)
+    if turn >= turn_limit and set_mode:
+        cars, _, checkpoint = new_generation(cars)
         turn = 0
         generation += 1
 
-    return cars, turn, generation
+    return cars, turn, generation, checkpoint
 
 
-# generation
-def new_generation(cars):
-    winners = getwinners(cars, 3)
 
-    for car in winners:
-        car.goToStart()
-
-    new_cars = mix_up(winners, 50)
-
-    return new_cars + winners
-
-
-cars = [RaceCar() for _ in range(20)]
+cars = get_stored_cars()
 for car in cars:
     car.image = carsprite
+
+# Checkpoints are shared by all cars; capture once and draw every frame.
+checkpoint_positions = [tuple(point) for point in cars[0].checkpoints]
 
 
 # variables
@@ -120,9 +127,11 @@ clock = pygame.time.Clock()
 last = pygame.time.get_ticks()
 
 # main loop
+checkpoint = 0
 while running:
-
+    value = min(300 + checkpoint * 45 , 600)
     screen.blit(mapsprite, (0, 0))
+    draw_checkpoints(checkpoint_positions)
 
     # mouse and keyboard detection
     for event in pygame.event.get():
@@ -132,7 +141,7 @@ while running:
         if event.type == pygame.KEYDOWN:
 
             if event.key == pygame.K_SPACE:
-                cars = new_generation(cars)
+                cars, _, checkpoint = new_generation(cars)
                 turn = 0
                 generation += 1
 
@@ -143,7 +152,7 @@ while running:
     dt = (current - last) / 1000.0
     last = current
 
-    cars, turn, generation = run_simulation(cars, turn, generation, dt)
+    cars, turn, generation, checkpoint = run_simulation(cars, turn, generation, dt,checkpoint, value)
 
     start = pygame.time.get_ticks()
 
