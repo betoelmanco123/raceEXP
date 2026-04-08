@@ -8,7 +8,7 @@ def calculate_fitness(car):
     value += car.counterCheckpoint * 150
 
     value += car.distanceTraveled * 0.2
-
+    
     if car.alive:
         value += 250
     else:
@@ -40,3 +40,11 @@ def getDistance(pointA, pointB):
     ax, ay = pointA
     bx, by = pointB
     return math.hypot((ax - bx), (ay - by))
+
+def is_all_died(cars: list) -> bool:
+    """Return `True` if every car in a list is not alive"""
+    
+    for car in cars:
+        if car.alive:
+            return False
+    return True
