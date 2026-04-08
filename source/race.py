@@ -1,5 +1,5 @@
 import random, math
-import processIm
+import source.processIm as processIm
 
 CONVERT = math.pi / 180
 

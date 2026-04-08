@@ -1,6 +1,6 @@
 import random
-from race import RaceCar
-from utils import getwinners, calculate_fitness
+from source.race import RaceCar
+from source.utils import getwinners, calculate_fitness
 
 
 

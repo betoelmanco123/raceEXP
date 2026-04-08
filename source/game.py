@@ -1,11 +1,11 @@
 import pygame
-from race import RaceCar
+from source.race import RaceCar
 from math import radians, sin, cos
-from heredation import new_generation
-from utils import getwinners
+from source.heredation import new_generation
+from source.utils import getwinners
 
 WIDTH = 900
-HEIGHT = 900
+HEIGHT = 700
 CAR_SPRITE_NAME = "sprites/car.png"
 MAP_SPRITE_NAME = "sprites/map3.jpg"
 CHECKPOINT_DRAW_RADIUS = 80

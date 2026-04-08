@@ -1,6 +1,6 @@
 import sys
-from game import Game
-from train import run_simulation
+from source.game import Game
+from source.train import run_simulation
 
 arguments = len(sys.argv)
 
