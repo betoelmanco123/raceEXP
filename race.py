@@ -1,11 +1,12 @@
 import random, math
 import processIm
-from utils import getDistance, getwinners
 
 CONVERT = math.pi / 180
 
 validMap = processIm.get_matrix("sprites/map3.jpg")
 startposition = (550, 50)
+
+
 
 
 class RaceCar:
@@ -222,7 +223,6 @@ class RaceCar:
 
     # ray cast
     def RayCast(self, angle):
-        crash = None
         rad = angle * CONVERT
         valueX = math.cos(rad)
         valueY = math.sin(rad)
@@ -232,11 +232,7 @@ class RaceCar:
             rayy = i * valueY + self.y
             coll = self.isWall(rayX, rayy)
             if coll:
-                crash = i
-                by, bx = rayy, rayX
-                break
-        if crash:
-            return getDistance((bx, by), (self.x, self.y))
+                return i
         return self.RayLarge + 1
 
     def multipleRayCast(self):
