@@ -40,13 +40,6 @@ def update_car(car: list[RaceCar], time) -> None:
     screen.blit(car.image, car.rect)
 
 
-def is_all_died(cars: list[RaceCar]) -> bool:
-    """Return `True` if every car in a list is not alive"""
-
-    for car in cars:
-        if car.alive:
-            return False
-    return True
 
 
 # raycast
@@ -109,10 +102,11 @@ def run_simulation(cars, turn, generation, time,checkpoint, turn_limit=300):
 
 
 cars = get_stored_cars()
+cars = [RaceCar() for _ in range (20)]
 for car in cars:
     car.image = carsprite
 
-# Checkpoints are shared by all cars; capture once and draw every frame.
+
 checkpoint_positions = [tuple(point) for point in cars[0].checkpoints]
 
 
@@ -154,7 +148,7 @@ while running:
 
     cars, turn, generation, checkpoint = run_simulation(cars, turn, generation, dt,checkpoint, value)
 
-    start = pygame.time.get_ticks()
+
 
     clock.tick(60)
     pygame.display.update()
