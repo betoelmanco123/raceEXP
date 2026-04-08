@@ -17,9 +17,9 @@ class RaceCar:
         self.position = startposition
         self.x, self.y = self.position
         self.speed = 3
-        self.aceleration = 0.09
-        self.mutateSpeed = 0.09
-        self.turnSpeed = 2
+        self.aceleration = 0.2
+        self.mutateSpeed = 0.1
+        self.turnSpeed = 1.8
         self.alive = True
         self.direction = 180
         self.distanceTraveled = 0
@@ -27,13 +27,13 @@ class RaceCar:
         self.speedLimit = 5
         self.steering = 0
         self.length = 28
-        self.known = list()
+        self.known = set()
         self.reward = 0
 
         # map stats
         self.map = validMap
         self.checkpoints = [
-            (85, 85),
+            (100, 85),
             (100, 400),
             (100, 750),
             (450, 750),
@@ -70,7 +70,7 @@ class RaceCar:
         if not self.alive:
             return
         self.speed += accel * time * 60
-        self.speed = min(self.speedLimit, max(-self.speedLimit + 3, self.speed))
+        self.speed = min(self.speedLimit, max(-self.speedLimit, self.speed))
         self.direction += steering * self.turnSpeed * (self.speed / self.speedLimit)
         self.direction %= 360
         rad = self.direction * (CONVERT)
@@ -95,7 +95,7 @@ class RaceCar:
         self.upToDate()
 
         if not self.position in self.known:
-            self.known.append(self.position)
+            self.known.add(self.position)
             self.reward += 1
         else:
             self.reward -= 1
@@ -191,7 +191,7 @@ class RaceCar:
     def _touch_checkpoint(self, x, y):
         cx, cy = self.checkpoints[self.counterCheckpoint]
 
-        if abs(x - cx) < 20 and abs(y - cy) < 20:
+        if abs(x - cx) < 100 and abs(y - cy) < 100:
             self.counterCheckpoint += 1
             if self.counterCheckpoint >= len(self.checkpoints):
                 self.counterCheckpoint = 0
@@ -206,10 +206,9 @@ class RaceCar:
         child = RaceCar()
         child.w_ih = [row[:] for row in self.w_ih]
         child.w_ho = [row[:] for row in self.w_ho]
-        if random.random() < 0.70:
-            child.mutate(
-                max(1.2 - (self.counterCheckpoint * 0.02 + self.laps * 0.09), 0.001)
-            )
+
+        child.mutate()
+            
         return child
 
     def mutate(self, speed=1):
@@ -280,7 +279,7 @@ class RaceCar:
         self.alive = True
         self.counterCheckpoint = 0
         self.laps = 0
-        self.known = list()
+        self.known = set()
         self.reward = 0
 
     def get_genetics(self):
@@ -295,25 +294,5 @@ class RaceCar:
         self.position = (self.x, self.y)
 
 
-def play():
-    everyone = [RaceCar() for _ in range(100)]
-
-    for k in range(100):
-        for m in range(200):
-            for car in everyone:
-                if not car.alive:
-                    continue
-                car.run()
-        winners = getwinners(everyone)
-
-        everyone = list()
-        for fhater in winners:
-            for _ in range(20):
-                child = fhater.haveChild()
-                everyone.append(child)
-    for q in winners:
-        q.printStats()
-
-
 if __name__ == "__main__":
-    play()
+    print("Hello from race.py")
