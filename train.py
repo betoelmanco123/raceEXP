@@ -8,6 +8,7 @@ START_CARS = 100
 WINNERS = 5
 
 
+
 def run_one_turn(cars, turn, generation, dt, turnlimit=500, current=0):
     indicator = False
     alive = False
@@ -17,7 +18,6 @@ def run_one_turn(cars, turn, generation, dt, turnlimit=500, current=0):
             alive = True
             car.run(dt)
 
-    # Si todos murieron, crear nueva generación y terminar el turno aquí.
     if not alive:
         cars, indicator, checkpoint = new_generation(cars, selected=WINNERS)
         generation += 1
@@ -57,10 +57,9 @@ def run_simulation():
             counter += 1
             saw_winner = True
 
-
-        if counter >= 10 or generation >= 100:
+        if counter >= 5 or generation >= 100:
             break
-
+        
     beaters = getwinners(cars, 5)
     store_cars(beaters)
     return saw_winner
