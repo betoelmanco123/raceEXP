@@ -1,17 +1,55 @@
 import random, math
-import source.processIm as processIm
+from source.utils import get_matrix
 
 CONVERT = math.pi / 180
 
-validMap = processIm.get_matrix("sprites/map3.jpg")
-startposition = (550, 50)
+validMap = get_matrix("sprites/map3.jpg")
+startposition = (400, 200)
+
+# curcular 
+#startposition = (640, 122)
 
 
+# circular 
+[
+            (170, 150),
+            (130, 360),
+            (170, 570,),
+            (640, 590),
+            (1050, 590),
+            (1145, 372),
+            (1130, 150),
+            (640, 130),
 
+        ]
+
+# infinit 
+[
+            (600, 350),
+            (800, 470),
+            (1050, 330,),
+            (900, 175),
+            (600, 350),
+            (400, 490),
+            (167, 332),
+            (330, 190),
+
+
+        ]
+
+[
+            (150, 132),
+            (75, 345),
+            (204, 584,),
+            (660, 460),
+            (1055, 563),
+            (993, 160),
+
+        ]
 
 class RaceCar:
 
-    def __init__(self, validMap=validMap, startposition=startposition):
+    def __init__(self, validMap, startposition=startposition):
 
         # car stats
         self.startposition = startposition
@@ -20,9 +58,9 @@ class RaceCar:
         self.speed = 3
         self.aceleration = 0.2
         self.mutateSpeed = 0.1
-        self.turnSpeed = 1.8
+        self.turnSpeed = 2
         self.alive = True
-        self.direction = 180
+        self.direction = 45
         self.distanceTraveled = 0
         self.hitbox = [13, 28]
         self.speedLimit = 5
@@ -30,17 +68,20 @@ class RaceCar:
         self.length = 28
         self.known = set()
         self.reward = 0
+        self.winner = False
+        self.TotalSpeed = 0
 
         # map stats
         self.map = validMap
         self.checkpoints = [
-            (100, 85),
-            (100, 400),
-            (100, 750),
-            (450, 750),
-            (750, 750),
-            (820, 425),
-            (800, 100),
+            (600, 350),
+            (800, 470),
+            (1050, 330,),
+            (900, 175),
+            (600, 350),
+            (400, 490),
+            (167, 332),
+            (330, 190),
         ]
         self.laps = 0
         self.counterCheckpoint = 0
@@ -52,7 +93,7 @@ class RaceCar:
         # Neurons
         self.hidden_size = 12
         self.input_size = 9
-        self.output_size = 3
+        self.output_size = 2
         self.angles = [-90, -45, 0, 45, 90]
         self.w_ih = [
             [random.uniform(-1, 1) for _ in range(self.input_size)]
@@ -68,6 +109,7 @@ class RaceCar:
         self.speed += self.aceleration
 
     def updatePosition(self, steering=0, accel=0, time=0):
+        self.TotalSpeed += self.speed
         if not self.alive:
             return
         self.speed += accel * time * 60
@@ -97,9 +139,9 @@ class RaceCar:
 
         if not self.position in self.known:
             self.known.add(self.position)
-            self.reward += 1
+            self.reward += 10
         else:
-            self.reward -= 1
+            self.reward -= 15
         return True
 
     # AI
@@ -125,10 +167,10 @@ class RaceCar:
             outputs.append(math.tanh(suma))
 
         accel = outputs[0]
-        right = outputs[1]
-        left = outputs[2]
-
-        turn = left - right
+        turn = outputs[1]
+        #right = outputs[1]
+        #left = outputs[2]
+        #turn = left - right
         return turn, accel
 
     # map
@@ -203,12 +245,12 @@ class RaceCar:
 
     # genetic mutation
 
-    def haveChild(self):
-        child = RaceCar()
+    def haveChild(self, speed=1):
+        child = RaceCar(validMap=self.map)
         child.w_ih = [row[:] for row in self.w_ih]
         child.w_ho = [row[:] for row in self.w_ho]
 
-        child.mutate()
+        child.mutate(speed=speed)
             
         return child
 
