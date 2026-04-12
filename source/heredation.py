@@ -13,6 +13,7 @@ def get_children_result(A, B):
         child.mutate()
     return child
 
+
 # cross generation
 def mix_up(cars, number):
 

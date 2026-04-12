@@ -3,7 +3,7 @@ from source.utils import get_matrix
 
 CONVERT = math.pi / 180
 
-validMap = get_matrix("sprites/map3.jpg")
+
 startposition = (400, 200)
 
 # curcular 
@@ -76,11 +76,13 @@ class RaceCar:
         self.checkpoints = [
             (600, 350),
             (800, 470),
-            (1050, 330,),
-            (900, 175),
-            (600, 350),
+            (937, 500),
+            (1050, 345,),
+            (937, 170),
+            (750, 300),
+            (600, 400),
             (400, 490),
-            (167, 332),
+            (190, 345),
             (330, 190),
         ]
         self.laps = 0
@@ -234,9 +236,10 @@ class RaceCar:
     def _touch_checkpoint(self, x, y):
         cx, cy = self.checkpoints[self.counterCheckpoint]
 
-        if abs(x - cx) < 100 and abs(y - cy) < 100:
+        if abs(x - cx) < 80 and abs(y - cy) < 80:
             self.counterCheckpoint += 1
             if self.counterCheckpoint >= len(self.checkpoints):
+                print("completed")
                 self.counterCheckpoint = 0
                 self.laps += 1
             return True

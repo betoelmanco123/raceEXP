@@ -1,8 +1,8 @@
-from race import RaceCar
-from utils import getwinners
-from heredation import new_generation
+from source.race import RaceCar
+from source.utils import getwinners
+from source.heredation import new_generation
 import time
-from storage import store_cars
+from source.storage import store_cars
 
 START_CARS = 100
 WINNERS = 5

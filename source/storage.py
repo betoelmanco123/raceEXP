@@ -1,5 +1,5 @@
 import json, os
-from race import RaceCar
+from source.race import RaceCar
 
 
 def store_cars(cars, dirName="cars"):
@@ -17,17 +17,17 @@ def save_car(car, fileName) -> None:
         json.dump(genes, file, indent=4)
 
 
-def get_stored_cars(dirName="cars"):
+def get_stored_cars(validMap, dirName="cars"):
     cars = list()
     for archivo in os.listdir(dirName):
-        car = read_car(dirName + "/" + archivo)
+        car = read_car(dirName + "/" + archivo, validMap)
         cars.append(car)
     return cars
 
 
-def read_car(fileName) -> RaceCar:
+def read_car(fileName, validmap) -> RaceCar:
 
-    car = RaceCar()
+    car = RaceCar(validMap=validmap)
     with open(fileName, "r") as file:
         data = json.load(file)
         car.w_ih = data["inputs"]
