@@ -11,3 +11,12 @@ Train agents to learn how to run in any given map
 1. The training of the agents can't depend on the visulization of the project (the agents can train without rendering the map)
  
  ![Demo](sprites/output.gif)
+
+
+## Assets
+
+"Basic 2D Gray Car" sprite by ACommonMorning  
+Source: https://acommonmorning.itch.io/basic-2d-gray-car
+
+All rights belong to the original creator.
+Used with respect to the author's terms.
