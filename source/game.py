@@ -82,6 +82,8 @@ class Game:
             f"{self.generation}", True, (255, 255, 255)
         )
         number_rect = number_surface.get_rect(center=(640, 600))
+        
+        
         self.screen.blit(number_surface, number_rect)
 
     def draw_checkpoints(self, checkpoints) -> None:
